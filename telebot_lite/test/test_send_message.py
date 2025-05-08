@@ -1,4 +1,4 @@
-from telebot.core.client import TelegramClient
+from telebot_lite.core.client import TelegramClient
 import asyncio
 import os
 from dotenv import load_dotenv
