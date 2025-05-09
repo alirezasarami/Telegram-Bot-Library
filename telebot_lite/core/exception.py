@@ -1,5 +1,6 @@
 # exceptions.py
 
+
 class TelegramAPIError(Exception):
     """خطای پایه برای همهٔ پاسخ‌های غیر ok از Bot API."""
 
@@ -18,24 +19,31 @@ class TelegramAPIError(Exception):
         desc = payload.get("description", "Unknown error")
 
         if code == 429:
-            return TelegramRetryAfter(desc, retry_after=payload.get("parameters", {}).get("retry_after", 0))
+            return TelegramRetryAfter(
+                desc, retry_after=payload.get("parameters", {}).get("retry_after", 0)
+            )
 
         exc_cls = ERROR_MAP.get(code, cls)
         return exc_cls(desc, code)
 
+
 class TelegramBadRequest(TelegramAPIError):
     pass
+
 
 class TelegramUnauthorized(TelegramAPIError):
     pass
 
+
 class TelegramForbidden(TelegramAPIError):
     pass
+
 
 class TelegramRetryAfter(TelegramAPIError):
     def __init__(self, description: str, retry_after: int):
         super().__init__(description, 429)
         self.retry_after = retry_after
+
 
 ERROR_MAP = {
     400: TelegramBadRequest,
@@ -43,6 +51,3 @@ ERROR_MAP = {
     403: TelegramForbidden,
     429: TelegramRetryAfter,
 }
-
-
-TelegramAPIError.from_payload = from_payload
