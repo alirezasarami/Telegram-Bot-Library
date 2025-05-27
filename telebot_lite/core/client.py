@@ -72,23 +72,84 @@ class TelegramClient:
         else:
             await self.send_message(chat_id, f"شما گفتید: {message}")
             
-    async def ask_for_contact(self, chat_id: int | str, message: str = "لطفاً شماره موبایل‌تان را ارسال کنید", text: str = "ارسال شماره 📱"):
-        keyboard = {
-            "keyboard": [[
-                {
-                    "text": text,
-                    "request_contact": True
-                }
-            ]],
-            "resize_keyboard": True,
-            "one_time_keyboard": True
+    async def keyboard(
+        self,
+        chat_id: int | str,
+        message: str,
+        buttons: list[list[dict]],
+        resize: bool = True,
+        one_time: bool = False,
+        delete_after: int = 0
+    ):
+        reply_markup = {
+            "keyboard": buttons,
+            "resize_keyboard": resize,
+            "one_time_keyboard": one_time
         }
 
-        return await self.send_message(
-            chat_id,
-            message,
-            reply_markup=keyboard
-        )
+        if delete_after == 0:
+            return await self.send_message(
+                chat_id,
+                message,
+                reply_markup=reply_markup
+            )
+        else:
+            return await self.send_and_delete(
+                chat_id,
+                message,
+                delay=delete_after,
+                reply_markup=reply_markup,
+            )
+
+            
+    async def keyboard_inline(
+        self,
+        chat_id: int | str,
+        message: str,
+        buttons: list[list[dict]],
+        delete_after: int = 0
+    ):
+        reply_markup = {
+            "inline_keyboard": buttons
+        }
+        
+        if delete_after == 0:
+
+            return await self.send_message(
+                chat_id,
+                message,    
+                reply_markup=reply_markup
+            )
+        else:
+            return await self.send_and_delete(
+                chat_id,
+                message,
+                delay=delete_after,
+                reply_markup=reply_markup
+            )
+
 
     async def close(self):
         await self._client.aclose()
+        
+    async def delete_message(self, chat_id: int | str, message_id: int):
+        return await self._request("deleteMessage", {
+            "chat_id": chat_id,
+            "message_id": message_id,
+        })
+        
+    async def send_and_delete(self, chat_id: int, text: str, delay: int = 10, **kwargs):
+        msg = await self.send_message(chat_id, text, **kwargs)
+        
+        if kwargs.get("use_celery", False):
+            from telebot_lite.utils.tasks.delete_task import delete_message_task
+            delete_message_task.apply_async((chat_id, msg["message_id"]), countdown=delay)
+        else:
+            asyncio.create_task(self._delete_after(chat_id, msg["message_id"], delay))
+
+    async def _delete_after(self, chat_id: int, message_id: int, delay: int):
+        await asyncio.sleep(delay)
+        try:
+            await self.delete_message(chat_id, message_id)
+        except Exception as e:
+            print(f"❌ delete failed for {chat_id=} {message_id=}: {e}")
