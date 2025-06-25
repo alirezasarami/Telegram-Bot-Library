@@ -9,7 +9,6 @@ description = "A lightweight async wrapper for Telegram Bot API 9.0"
 requires-python = ">=3.9"
 authors = [{ name = "Alireza Sarami", email = "alirs1997@gmail.com" }]
 
-# لیست وابستگی‌ها (فرمت PEP 508، بدون caret ^)
 dependencies = [
   "httpx>=0.27,<0.28",
   "pydantic>=2.8,<3.0",
@@ -20,10 +19,12 @@ dependencies = [
 [project.urls]
 Homepage = "https://github.com/alireza_sarami/telebot-lite"
 
-# اختیاری: وابستگی‌های محیط توسعه
 [project.optional-dependencies]
 dev = [
   "pytest",
   "ruff",
   "mypy"
 ]
+
+[tool.hatch.build]
+packages = ["telebot_lite"]
