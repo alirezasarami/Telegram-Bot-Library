@@ -27,4 +27,4 @@ dev = [
 ]
 
 [tool.hatch.build]
-packages = ["telebot_lite"]
+sources = ["src"]
